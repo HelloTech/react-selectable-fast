@@ -15,6 +15,7 @@
     "build": "webpack",
     "transpile": "babel ./src/ -d ./lib/",
     "build:prod": "NODE_ENV=production webpack --config webpack.production.config.js",
+    "postinstall": "npm run prepublish",
     "prepublish": "npm run lint && npm run clean && npm run build:prod && npm run transpile",
     "prettier": "npx prettier --write src/**/*.js example/**/*.js *.js",
     "lint": "npx eslint --fix --ext js .",
