@@ -95,6 +95,7 @@ class SelectableGroup extends Component {
     this.registry = new Set()
     this.selectedItems = new Set()
     this.selectingItems = new Set()
+    this.deselectedItems = new Set()
     this.ignoreCheckCache = new Map()
     this.ignoreList = this.props.ignoreList.concat([
       '.selectable-select-all',
@@ -191,15 +192,13 @@ class SelectableGroup extends Component {
 
   registerSelectable = selectableItem => {
     this.registry.add(selectableItem)
-    if (selectableItem.state.selected) {
-      this.selectedItems.add(selectableItem)
-    }
   }
 
   unregisterSelectable = selectableItem => {
     this.registry.delete(selectableItem)
     this.selectedItems.delete(selectableItem)
     this.selectingItems.delete(selectableItem)
+    this.deselectedItems.delete(selectableItem)
   }
 
   toggleSelectionMode() {
@@ -302,8 +301,10 @@ class SelectableGroup extends Component {
     if (click && isCollided) {
       if (selected) {
         this.selectedItems.delete(item)
+        this.deselectedItems.add(item)
       } else {
         this.selectedItems.add(item)
+        this.deselectedItems.delete(item)
       }
 
       item.setState({ selected: !selected })
@@ -318,6 +319,7 @@ class SelectableGroup extends Component {
 
         this.deselectionStarted = true
 
+        this.deselectedItems.add(item)
         return this.selectedItems.delete(item)
       }
 
@@ -328,6 +330,7 @@ class SelectableGroup extends Component {
 
         this.selectionStarted = true
         this.selectingItems.add(item)
+        this.deselectedItems.delete(item)
 
         return { updateSelecting: true }
       }
@@ -338,6 +341,7 @@ class SelectableGroup extends Component {
         item.setState({ selecting: false })
 
         this.selectingItems.delete(item)
+        this.deselectedItems.add(item)
 
         return { updateSelecting: true }
       }
@@ -469,7 +473,7 @@ class SelectableGroup extends Component {
       for (const item of this.selectingItems.values()) {
         item.setState({ selected: true, selecting: false })
       }
-      this.selectedItems = new Set([...this.selectedItems, ...this.selectingItems])
+      this.selectedItems = new Set([...this.selectingItems])
       this.selectingItems.clear()
 
       if (e.which === 1 && this.mouseDownData.target === e.target) {
@@ -481,8 +485,12 @@ class SelectableGroup extends Component {
         boxWidth: 0,
         boxHeight: 0,
       })
-      this.props.onSelectionFinish([...this.selectedItems])
+      this.props.onSelectionFinish([...this.selectedItems], [...this.deselectedItems])
     }
+
+    this.deselectedItems.clear()
+    this.selectedItems.clear()
+    this.selectingItems.clear()
 
     this.toggleSelectionMode()
     this.cleanUp()
@@ -508,7 +516,8 @@ class SelectableGroup extends Component {
         },
         { click: true }
       )
-      this.props.onSelectionFinish([...this.selectedItems], this.clickedItem)
+
+      this.props.onSelectionFinish([...this.selectedItems], [...this.deselectedItems])
 
       if (e.which === 1) {
         this.preventEvent(e.target, 'click')
