@@ -573,10 +573,11 @@ class SelectableGroup extends Component {
   getSelectboxRef = c => (this.selectbox = c)
 
   render() {
+    const inlineStyle = Object.assign({}, { position: 'relative' }, this.props.style)
     return (
       <this.props.component
         ref={this.getGroupRef}
-        style={this.props.style}
+        style={inlineStyle}
         className={`${this.props.className} ${
           this.state.selectionMode ? this.props.selectionModeClass : ''
         }`}
